@@ -2,26 +2,81 @@ package com.example;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+/**
+ * Here is the list of all Stream terminal operations:
+	toArray()
+	collect()
+	count()
+	reduce()
+	forEach()
+	forEachOrdered()
+	min()
+	max()
+	anyMatch()
+	allMatch()
+	noneMatch()
+	findAny()
+	findFirst()
+ */
 public class ReduceFunction {
 
-	List<Person> persons = DataGenerator.generate();
+	List<Person> persons;
+	
+	public ReduceFunction() {
+		persons = DataGenerator.generate();
+		System.out.println("---- for each loop in constructor ----");
+		persons.stream()
+		.map(person -> {
+			person.setUuid(UUID.randomUUID());
+			return person;
+		})		
+		.forEach(p -> { 
+			System.out.println(p);
+		});
+	}
 	
 	public void runAll() {
-//		createOccupationCategory();
-//		createAgeGroups();
-//		filterByAge(40);
-//		countByOccupation("student");
-		
+		parallelProcessing();
 		countOccupation();
+		CategorizedByOccupation();
+		createAgeGroups();
+		filterByAge(40);
+		countByOccupation("student");		
+	}
+	
+	public void parallelProcessing() {
+		// Pattern: U reduce(I, (U, T) -> U, (U, U) -> U)
+		System.out.println("---- parallel processing ----");
+		Set<String> occupations = persons.stream()		
+				.parallel()
+				.reduce(new HashSet<String>(), (sub, p) -> {
+					sub.add(p.getOccupation());
+					return sub;
+				}, 
+				(sum, thread) -> {
+					sum.addAll(thread);
+					return sum;
+				});
+		System.out.println("Occupations: " + Utils.toJson(occupations));
+		
+		int totalAges = persons.parallelStream().reduce(0, (sub, p) -> (sub + p.getAge()), Integer::sum);
+		System.out.println("Total ages in parallel: " + totalAges);
+		
+		totalAges = persons.stream().parallel().reduce(0, (sub, p) -> (sub + p.getAge()), 
+				(sum, thread) -> (sum + thread));
+		System.out.println("Total ages in parallel (init, accumulator, combiner): " + totalAges);		
 	}
 
-	public Map<String, List<Person>> createOccupationCategory() {
-		// U reduce(I, (U, T) -> U, (U, U) -> U)
+	public Map<String, List<Person>> CategorizedByOccupation() {
+		System.out.println("---- categorized by occupation ----");
+		
 		Map<String, List<Person>> initMap = new HashMap<>();
 		Map<String, List<Person>> result = persons
 			.stream()
@@ -49,6 +104,7 @@ public class ReduceFunction {
 	}
 
 	public Map<String, Integer> countOccupation() {
+		System.out.println("---- count by occupation ----");
 		// U reduce(I, (U, T) -> U, (U, U) -> U)
 		Map<String, Integer> initMap = new HashMap<>();
 		Map<String, Integer> result = persons
@@ -78,6 +134,8 @@ public class ReduceFunction {
 	}	
 	
 	public Map<String, List<Person>> createAgeGroups() {
+		
+		System.out.println("---- age groups ----");
 		
 		String age20to30 = "Age 20-30";
 		String age30to40 = "Age 30-40";
@@ -119,6 +177,8 @@ public class ReduceFunction {
 	}
 	
 	public List<Person> filterByAge(int age) {
+		System.out.println("---- filter by age ---- age: " + age);
+		
 		List<Person> result = persons
 			.stream()
 			.map(person -> {
@@ -135,12 +195,14 @@ public class ReduceFunction {
 	}
 	
 	public long countByOccupation(String occupation) {
+		System.out.println("---- count by occupation ---- occupation: " + occupation);
 		long result = persons
 			.stream()
 			.map(person -> {
 				person.setUuid(UUID.randomUUID());
 				return person;
 			})
+			.parallel()
 			.filter(p -> (p.getOccupation() == occupation))
 			.count();
 		
@@ -149,22 +211,4 @@ public class ReduceFunction {
 		
 		return result;
 	}
-	
-	/**
-	 * Here is the list of all Stream terminal operations:
-		toArray()
-		collect()
-		count()
-		reduce()
-		forEach()
-		forEachOrdered()
-		min()
-		max()
-		anyMatch()
-		allMatch()
-		noneMatch()
-		findAny()
-		findFirst()
-	 */
-
 }
