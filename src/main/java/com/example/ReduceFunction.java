@@ -42,9 +42,7 @@ public class ReduceFunction {
 		});
 		
 		System.out.println("---- simple for each loop ----");
-		persons.forEach(p -> {
-			System.out.println(p);
-		});
+		persons.forEach(System.out::println);
 	}
 	
 	public void runAll() {
