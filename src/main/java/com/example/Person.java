@@ -11,7 +11,7 @@ public class Person {
 	private String name;
 	private int age;
 	private String occupation;
-	
+
 	public Person(String name, int age, String occupation) {
 		this.name = name;
 		this.age = age;

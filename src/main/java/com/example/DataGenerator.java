@@ -2,6 +2,8 @@ package com.example;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
 public class DataGenerator {
 
@@ -22,6 +24,12 @@ public class DataGenerator {
 		persons.add(p);
 		p = new Person("p7", 34, "student");
 		persons.add(p);
+
+		persons = persons.stream()
+		    .map(person -> {
+			    person.setUuid(UUID.randomUUID());
+			    return person;
+		    }).collect(Collectors.toList());
 
 		return persons;
 	}
